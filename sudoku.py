@@ -8,40 +8,49 @@ if int(math.sqrt(SIZE)) != math.sqrt(SIZE):
     raise ValueError("SIZE must be a square")
 
 # 1 through 9
-SYMBOLS = [str(i + 1) for i in range(SIZE)]
+SYMBOLS = [i + 1 for i in range(SIZE)]
 
-# A square is just a mutable set of remaining valid symbols.
+# A cell is just a mutable set of remaining valid symbols.
 # Starts with all symbols.
-def init_square():
+def init_cell():
     return set(SYMBOLS)
 
-# A board is a square array of arrays.
+# A board is a cell array of arrays.
 def init_board():
     board = []
     for _ in range(SIZE):
-        row_squares = []
+        row_cells = []
         for _ in range(SIZE):
-            row_squares.append(init_square())
-        board.append(row_squares)
+            row_cells.append(init_cell())
+        board.append(row_cells)
     return board
 
 # Returns a string.
 def render_board(board):
-    square_dim = int(math.sqrt(SIZE))
-    render_dim = (square_dim + 1) * SIZE
+    cell_dim = int(math.sqrt(SIZE))
+    render_dim = (cell_dim + 1) * SIZE
     lines = [[' '] * render_dim for row in range(render_dim)]
     for board_row in range(SIZE):
         for board_col in range(SIZE):
             for i, symbol in enumerate(SYMBOLS):
-                square_row = i // square_dim
-                square_col = i % square_dim
-                render_row = board_row * (square_dim + 1) + square_row
-                render_col = board_col * (square_dim + 1) + square_col
-                lines[render_row][render_col] = symbol
+                cell_row = i // cell_dim
+                cell_col = i % cell_dim
+                render_row = board_row * (cell_dim + 1) + cell_row
+                render_col = board_col * (cell_dim + 1) + cell_col
+                if symbol in board[board_row][board_col]:
+                    lines[render_row][render_col] = str(symbol)
     return '\n'.join(''.join(line) for line in lines)
+
+# Update the valid cells for a row and col
+def update_cell(board, row, col, valid_symbols):
+    board[row][col] = set(valid_symbols)
 
 def main():
     board = init_board()
+    print(render_board(board))
+    update_cell(board, 0, 2, [3, 4, 5, 6])
+    print('---')
+    print()
     print(render_board(board))
 
 main()
