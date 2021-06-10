@@ -2,13 +2,15 @@
 
 import os
 import math
+import sys
 
 SIZE = int(os.environ.get('SIZE', 9))
 if int(math.sqrt(SIZE)) != math.sqrt(SIZE):
     raise ValueError("SIZE must be a square")
+OFFSET = int(os.environ.get('OFFSET', 0))
 
 # 1 through 9
-SYMBOLS = [i + 1 for i in range(SIZE)]
+SYMBOLS = [i + OFFSET for i in range(SIZE)]
 
 # A cell is just a mutable set of remaining valid symbols.
 # Starts with all symbols.
@@ -41,16 +43,50 @@ def render_board(board):
                     lines[render_row][render_col] = str(symbol)
     return '\n'.join(''.join(line) for line in lines)
 
-# Update the valid cells for a row and col
-def update_cell(board, row, col, valid_symbols):
-    board[row][col] = set(valid_symbols)
+# Update the available symbols for a cell
+def update_cell(board, row, col, symbols):
+    symbols = set(symbols)
+    invalid = symbols - set(SYMBOLS)
+    if invalid:
+        raise ValueError("invalid symbols: {}".format(invalid))
+    if row >= SIZE or col >= SIZE:
+        raise ValueError("coordinates out of range: ({}, {})".format(row, col))
+    board[row][col] = symbols
+
+def done(board):
+    for row in board:
+        for cell in row:
+            if len(cell) > 1:
+                return False
+    return True
+
+def parse_update(line):
+    coords, symbols = line.split(':')
+    row, col = list(map(int, coords.split(',')))
+    symbols = list(map(int, symbols.split(',')))
+    return row, col, symbols
 
 def main():
     board = init_board()
-    print(render_board(board))
-    update_cell(board, 0, 2, [3, 4, 5, 6])
-    print('---')
-    print()
-    print(render_board(board))
+    while not done(board):
+        print('---')
+        print(render_board(board))
+        print("Provide an update in the format 'row,col:s1,s2,s3,...'")
+        for line in sys.stdin:
+            line = line.strip()
+            if line == 'q':
+                return
+            try:
+                row, col, symbols = parse_update(line.strip())
+                break
+            except:
+                print("Failed to parse update: '{}'".format(line))
+        print()
+        try:
+            update_cell(board, row, col, symbols)
+            print("Applied update ({}, {}) -> {}".format(row, col, symbols))
+        except Exception as e:
+            print("Failed to apply update: '{}': {}".format(line, e))
+
 
 main()
