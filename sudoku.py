@@ -36,7 +36,7 @@ def init_board() -> Board:
     return board
 
 def render_board(board: Board) -> str:
-    '''Returns a string representing the provided board.'''
+    '''Returns a human-friendly string representation of the provided board.'''
     cell_dim = int(math.sqrt(SIZE))
     render_dim = (cell_dim + 1) * SIZE
     lines = [[' '] * render_dim for row in range(render_dim)]
@@ -78,30 +78,38 @@ def parse_update(line: str) -> Tuple[int, int, List[Symbol]]:
     symbols = list(map(int, symbols.split(',')))
     return row, col, symbols
 
-def resolve_board(board):
-    '''Performs a single pass of analysis -> updates'''
+def auto_update(board: Board):
+    '''Performs an automatic update to the provided board.
+    Updates board in place.'''
     # TODO: ADD CODE HERE
     print('Not yet implemented')
+
+def manual_update(board: Board, line: str) -> bool:
+    '''Performs the update specified by the provided string to the provided
+    board. Returns True if update was successful.'''
+    try:
+        row, col, symbols = parse_update(line.strip())
+        update_cell(board, row, col, symbols)
+        return True
+    except Exception as e:
+        print("ERROR: failed to apply update: '{}': {}".format(line, e))
+        return False
 
 def main():
     board = init_board()
     while not done(board):
         print('---')
         print(render_board(board))
-        print("Provide a manual update ('row,col:s1,s2,s3,...') or '+' to resolve board")
+        print("Provide a manual update ('row,col:sym1,sym2,...') or '+' to auto-update")
         for line in sys.stdin:
             line = line.strip()
             if line == 'q':
                 return
             elif line == '+':
-                resolve_board(board)
+                auto_update(board)
                 break
             else:
-                try:
-                    row, col, symbols = parse_update(line.strip())
-                    update_cell(board, row, col, symbols)
+                if manual_update(board, line):
                     break
-                except Exception as e:
-                    print("ERROR: failed to apply update: '{}': {}".format(line, e))
 
 main()
